@@ -11,37 +11,38 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 <style>
     :root {
-        --primary-color: #FF5733;
-        --secondary-color: #C70039;
-        --accent-color: #900C3F;
-        --background-color: #000000; /* 背景黑色 */
-        --text-color: #FFFFFF;
-        --button-gradient: linear-gradient(135deg, #FF5733, #900C3F);
-        --card-background: #2C2C2C;
-        --input-background: #3E3E3E;
-        --input-border: #5A5A5A;
-        --input-focus: #FF5733;
-        --success-color: #28A745;
-        --error-color: #DC3545;
+        --primary-color: #6366F1; /* 更柔和的主色調 */
+        --secondary-color: #4F46E5;
+        --accent-color: #4338CA;
+        --background-color: #0F172A; /* 深藍色背景 */
+        --text-color: #E2E8F0;
+        --button-gradient: linear-gradient(135deg, #6366F1, #4338CA);
+        --card-background: rgba(30, 41, 59, 0.8); /* 半透明卡片背景 */
+        --input-background: rgba(51, 65, 85, 0.6);
+        --input-border: #475569;
+        --input-focus: #6366F1;
+        --success-color: #10B981;
+        --error-color: #EF4444;
     }
 
     body {
         font-family: 'Noto Sans TC', sans-serif;
         background: var(--background-color);
+        background-image: radial-gradient(circle at 50% 50%, #1E293B 0%, #0F172A 100%);
         color: var(--text-color);
         line-height: 1.7;
         opacity: 0;
-        animation: fadeInPage 0.8s forwards;
+        animation: fadeInPage 1s forwards;
         position: relative;
         overflow: hidden;
     }
 
     .fade-in {
-        animation: fadeIn 0.6s ease-in-out;
+        animation: fadeIn 0.8s ease-in-out;
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(30px); }
+        from { opacity: 0; transform: translateY(40px); }
         to { opacity: 1; transform: translateY(0); }
     }
 
@@ -55,25 +56,26 @@
     }
 
     .spinner {
-        border: 4px solid rgba(255, 255, 255, 0.3);
+        border: 4px solid rgba(255, 255, 255, 0.2);
         width: 40px;
         height: 40px;
         border-radius: 50%;
         border-left-color: #ffffff;
-        animation: spin 1s linear infinite;
+        animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
     }
 
     .card {
         background-color: var(--card-background);
-        border-radius: 2rem;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(10px);
-        transition: all 0.4s ease;
+        border-radius: 2.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
+        transform: translateY(-12px);
+        box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.3);
     }
 
     .toggle-button {
@@ -82,121 +84,128 @@
         color: var(--text-color);
         border: 2px solid var(--input-border);
         font-weight: 600;
+        backdrop-filter: blur(10px);
     }
 
     .toggle-button.active {
         background: var(--button-gradient);
         color: white;
-        box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
         transform: translateY(-3px);
     }
 
     textarea, input[type="text"] {
         background-color: var(--input-background);
         border: 2px solid var(--input-border);
-        border-radius: 1rem;
-        transition: all 0.4s ease;
+        border-radius: 1.2rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         font-size: 1.1rem;
+        backdrop-filter: blur(10px);
     }
 
     textarea:focus, input[type="text"]:focus {
         border-color: var(--input-focus);
-        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
         outline: none;
-        transform: translateY(-2px);
+        transform: translateY(-3px);
     }
 
     .submit-button {
         background: var(--button-gradient);
         color: white;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        border-radius: 2rem; /* 圓角 */
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 2rem;
         font-weight: 600;
         letter-spacing: 0.05em;
         text-transform: uppercase;
+        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
     }
 
     .submit-button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 30px rgba(79, 70, 229, 0.3);
+        transform: translateY(-4px);
+        box-shadow: 0 20px 30px rgba(99, 102, 241, 0.4);
     }
 
     .submit-button:active {
-        transform: scale(0.98);
+        transform: scale(0.97);
     }
 
     @media (max-width: 640px) {
         .card {
-            border-radius: 1.5rem;
+            border-radius: 2rem;
         }
     }
 
     #mediaPreview {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 1rem;
-        padding: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1.2rem;
+        padding: 1.2rem;
     }
 
     #mediaPreview img, #mediaPreview video {
         width: 100%;
-        height: 120px;
+        height: 140px;
         object-fit: cover;
-        border-radius: 1rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
+        border-radius: 1.2rem;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     #mediaPreview img:hover, #mediaPreview video:hover {
-        transform: scale(1.05);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        transform: scale(1.08);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
     }
 
     .media-upload-area {
         border: 2px dashed var(--primary-color);
-        border-radius: 1rem;
-        padding: 2rem;
+        border-radius: 1.2rem;
+        padding: 2.5rem;
         text-align: center;
-        transition: all 0.3s ease;
-        background: rgba(79, 70, 229, 0.05);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(99, 102, 241, 0.08);
+        backdrop-filter: blur(10px);
     }
 
     .media-upload-area:hover {
         border-color: var(--accent-color);
-        background: rgba(79, 70, 229, 0.1);
+        background: rgba(99, 102, 241, 0.12);
+        transform: translateY(-4px);
     }
 
     .upload-icon {
         color: var(--primary-color);
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
+        font-size: 3rem;
+        margin-bottom: 1.2rem;
     }
 
     .upload-button {
         background: var(--button-gradient);
         color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 2rem; /* 圓角 */
+        padding: 0.8rem 1.5rem;
+        border-radius: 2rem;
         font-weight: 600;
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
+        box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
     }
 
     .upload-button:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 15px rgba(79, 70, 229, 0.3);
+        box-shadow: 0 12px 20px rgba(99, 102, 241, 0.4);
     }
 
     .background-animation {
-        animation: backgroundAnimation 5s infinite alternate;
+        animation: backgroundAnimation 8s infinite alternate;
     }
 
     @keyframes backgroundAnimation {
         0% { background-color: var(--primary-color); }
+        50% { background-color: var(--secondary-color); }
         100% { background-color: var(--accent-color); }
     }
 
-    /* 添加星星背景動畫 */
+    /* 改進星星背景動畫 */
     .stars {
         position: fixed;
         top: 0;
@@ -209,18 +218,19 @@
 
     .star {
         position: absolute;
-        width: 2px;
-        height: 2px;
+        width: 3px;
+        height: 3px;
         background: #ffffff;
         border-radius: 50%;
         animation: twinkle var(--duration) linear infinite;
         opacity: 0;
+        box-shadow: 0 0 10px #ffffff, 0 0 20px #6366F1;
     }
 
     @keyframes twinkle {
-        0% { opacity: 0; transform: translateY(0); }
-        50% { opacity: 1; }
-        100% { opacity: 0; transform: translateY(100vh); }
+        0% { opacity: 0; transform: translateY(0) scale(0.8); }
+        50% { opacity: 1; transform: translateY(50vh) scale(1.2); }
+        100% { opacity: 0; transform: translateY(100vh) scale(0.8); }
     }
 </style>
 </head>
@@ -229,20 +239,18 @@
 <div class="min-h-full flex flex-col">
     <main class="flex-grow py-16 px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-3xl">
-            <div class="card p-10 mb-8">
-                <h1 class="text-5xl font-bold text-center mb-10 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600">匿名江翠</h1>
+            <div class="card p-12 mb-8">
+                <h1 class="text-6xl font-bold text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 drop-shadow-lg">匿名江翠</h1>
                 
-                <form id="postForm" class="space-y-8 text-center">
-
-
+                <form id="postForm" class="space-y-10 text-center">
                     <div>
-                        <label for="postContent" class="block text-xl font-semibold mb-3">分享你的想法</label>
-                        <textarea id="postContent" name="postContent" rows="5" class="w-full px-5 py-4 rounded-xl mx-auto border-2 border-gray-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition duration-300 ease-in-out transform hover:scale-105" placeholder="寫下你的想法..."></textarea>
-                        <p id="charCount" class="mt-3 text-base text-gray-600 font-medium">已輸入 0 字</p>
+                        <label for="postContent" class="block text-2xl font-semibold mb-4 text-indigo-200">分享你的想法</label>
+                        <textarea id="postContent" name="postContent" rows="5" class="w-full px-6 py-5 rounded-xl mx-auto border-2 border-indigo-500/30 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-300/50 transition duration-300 ease-in-out transform hover:scale-102" placeholder="寫下你的想法..."></textarea>
+                        <p id="charCount" class="mt-4 text-lg text-indigo-300 font-medium">已輸入 0 字</p>
                     </div>
 
                     <div>
-                        <label class="block text-xl font-semibold mb-3">添加圖片（最多一個檔案）</label>
+                        <label class="block text-2xl font-semibold mb-4 text-indigo-200">添加圖片（最多一個檔案）</label>
                         <div class="media-upload-area">
                             <div class="upload-icon">📸</div>
                             <label class="cursor-pointer upload-button">
@@ -250,19 +258,19 @@
                                 <input id="postMedia" name="postMedia" type="file" accept="image/*" class="hidden">
                             </label>
                         </div>
-                        <div id="mediaPreview" class="mt-6"></div>
+                        <div id="mediaPreview" class="mt-8"></div>
                     </div>
 
                     <div>
-                        <button type="submit" id="submitButton" class="submit-button w-full py-4 px-8 text-lg font-bold flex items-center justify-center space-x-3 background-animation">
+                        <button type="submit" id="submitButton" class="submit-button w-full py-5 px-10 text-xl font-bold flex items-center justify-center space-x-4 background-animation">
                             <span>發布貼文</span>
-                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                             </svg>
                         </button>
                     </div>
                 </form>
-                <p id="postCount" class="mt-6 text-lg text-gray-400">目前貼文數量：0</p>
+                <p id="postCount" class="mt-8 text-xl text-indigo-300">目前貼文數量：0</p>
             </div>
         </div>
     </main>
@@ -296,9 +304,9 @@
         charCount.textContent = `已輸入 ${currentLength} 字`;
         
         if (currentLength < 10) {
-            charCount.classList.add('text-red-500');
+            charCount.classList.add('text-red-400');
         } else {
-            charCount.classList.remove('text-red-500');
+            charCount.classList.remove('text-red-400');
         }
     }
 
@@ -382,16 +390,16 @@
                 mediaUrls: mediaUrls,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 ipAddress: ipAddress,
-                status: 'pending', // 添加狀態欄位
-                createdDate: new Date().toISOString() // 添加創建日期
+                status: 'pending',
+                createdDate: new Date().toISOString()
             });
 
             // 成功處理
             submitButton.innerHTML = '發布成功！';
-            submitButton.classList.add('bg-green-500');
+            submitButton.classList.add('bg-emerald-500');
             
             const message = document.createElement('div');
-            message.className = 'mt-4 p-4 bg-green-50 text-green-700 rounded-xl text-center fade-in font-medium';
+            message.className = 'mt-6 p-5 bg-emerald-500/20 text-emerald-300 rounded-xl text-center fade-in font-medium text-lg';
             message.textContent = '請耐心等待審核';
             this.insertAdjacentElement('afterend', message);
             
@@ -399,10 +407,10 @@
             setTimeout(() => {
                 this.reset();
                 charCount.textContent = '已輸入 0 字';
-                charCount.classList.remove('text-red-500');
-                submitButton.innerHTML = '發布貼文 <svg class="h-6 w-6 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
+                charCount.classList.remove('text-red-400');
+                submitButton.innerHTML = '發布貼文 <svg class="h-7 w-7 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
                 submitButton.disabled = false;
-                submitButton.classList.remove('bg-green-500');
+                submitButton.classList.remove('bg-emerald-500');
                 message.remove();
                 mediaPreview.innerHTML = '';
             }, 3000);
@@ -418,26 +426,22 @@
     // 生成星星的函數
     function createStars() {
         const container = document.getElementById('starsContainer');
-        const starCount = 100; // 星星數量
+        const starCount = 150; // 增加星星數量
 
         for (let i = 0; i < starCount; i++) {
             const star = document.createElement('div');
             star.className = 'star';
             
-            // 隨機位置
             const left = Math.random() * 100;
             star.style.left = `${left}%`;
             
-            // 隨機大小
-            const size = Math.random() * 3;
+            const size = Math.random() * 4;
             star.style.width = `${size}px`;
             star.style.height = `${size}px`;
             
-            // 隨機動畫持續時間
-            const duration = 3 + Math.random() * 7;
+            const duration = 4 + Math.random() * 8;
             star.style.setProperty('--duration', `${duration}s`);
             
-            // 隨機延遲開始時間
             const delay = Math.random() * 5;
             star.style.animationDelay = `${delay}s`;
             
@@ -445,16 +449,13 @@
         }
     }
 
-    // 頁面加載時創建星星
     window.addEventListener('load', createStars);
 
-    // 顯示目前貼文數量
     async function updatePostCount() {
         const snapshot = await db.collection('posts').get();
         postCount.textContent = `目前貼文數量：${snapshot.size}`;
     }
 
-    // 頁面加載時更新貼文數量
     window.addEventListener('load', updatePostCount);
 </script>
 </body>
