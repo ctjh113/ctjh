@@ -262,6 +262,7 @@
                         </button>
                     </div>
                 </form>
+                <p id="postCount" class="mt-6 text-lg text-gray-400">目前貼文數量：0</p>
             </div>
         </div>
     </main>
@@ -288,6 +289,7 @@
     const submitButton = document.getElementById('submitButton');
     const postMedia = document.getElementById('postMedia');
     const mediaPreview = document.getElementById('mediaPreview');
+    const postCount = document.getElementById('postCount');
 
     function updateCharCount() {
         const currentLength = postContent.value.length;
@@ -347,8 +349,8 @@
         const content = postContent.value;
         const mediaFiles = postMedia.files;
         
-        if (content.trim().length === 0 && mediaFiles.length === 0) {
-            alert('請輸入內容或選擇圖片');
+        if (content.trim().length === 0) {
+            alert('請輸入內容');
             return;
         }
         
@@ -445,6 +447,15 @@
 
     // 頁面加載時創建星星
     window.addEventListener('load', createStars);
+
+    // 顯示目前貼文數量
+    async function updatePostCount() {
+        const snapshot = await db.collection('posts').get();
+        postCount.textContent = `目前貼文數量：${snapshot.size}`;
+    }
+
+    // 頁面加載時更新貼文數量
+    window.addEventListener('load', updatePostCount);
 </script>
 </body>
 </html>
