@@ -1,28 +1,21 @@
 :root {
-    --primary-color: #C4B5FD; /* 更柔和的紫色 */
-    --secondary-color: #A78BFA; /* 中紫色 */
-    --accent-color: #8B5CF6; /* 深紫色 */
-    --background-color: #1E1B4B; /* 深靛藍色背景 */
-    --text-color: #F8FAFC;
-    --button-gradient: linear-gradient(135deg, #C4B5FD, #8B5CF6);
-    --card-background: rgba(30, 41, 59, 0.75);
-    --input-background: rgba(51, 65, 85, 0.7);
-    --input-border: #475569;
-    --input-focus: #A78BFA;
+    --primary-color: #BC7BD2; /* 主要紫色 */
+    --secondary-color: #00C2D8; /* 藍色 */
+    --accent-color: #9B4FA6; /* 深紫色 */
+    --background-color: #FFFFFF; /* 白色背景 */
+    --text-color: #333333;
+    --button-gradient: linear-gradient(135deg, #BC7BD2, #00C2D8);
+    --card-background: rgba(255, 255, 255, 0.95);
+    --input-background: rgba(255, 255, 255, 0.9);
+    --input-border: #BC7BD2;
+    --input-focus: #00C2D8;
     --success-color: #10B981;
     --error-color: #EF4444;
 }
 
 body {
     font-family: 'Noto Sans TC', sans-serif;
-    background: linear-gradient(
-        135deg,
-        var(--background-color),
-        #2D3748,
-        #4A5568
-    );
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
+    background: #FFFFFF;
     color: var(--text-color);
     line-height: 1.8;
     opacity: 0;
@@ -62,16 +55,13 @@ body {
 .card {
     background-color: var(--card-background);
     border-radius: 2.8rem;
-    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-    animation: cardFloat 6s ease-in-out infinite;
+    box-shadow: 0 10px 30px -10px rgba(188, 123, 210, 0.2);
+    border: 1px solid rgba(188, 123, 210, 0.15);
 }
 
 .card:hover {
-    transform: translateY(-15px);
-    box-shadow: 0 40px 70px -20px rgba(0, 0, 0, 0.4);
+    transform: none;
+    box-shadow: 0 10px 30px -10px rgba(188, 123, 210, 0.2);
 }
 
 .toggle-button {
@@ -110,19 +100,17 @@ textarea:focus, input[type="text"]:focus {
 .submit-button {
     background: var(--button-gradient);
     color: white;
-    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s ease;
     border-radius: 2.2rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    box-shadow: 0 15px 25px rgba(167, 139, 250, 0.4);
-    background-size: 200% auto;
-    animation: shimmer 3s linear infinite;
+    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.2);
 }
 
 .submit-button:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 25px 35px rgba(167, 139, 250, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(167, 139, 250, 0.3);
 }
 
 .submit-button:active {
@@ -157,80 +145,35 @@ textarea:focus, input[type="text"]:focus {
 }
 
 .media-upload-area {
-    border: 2.5px dashed var(--primary-color);
+    border: 2px solid var(--primary-color);
     border-radius: 1.4rem;
-    padding: 3rem;
+    padding: 2rem;
     text-align: center;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(167, 139, 250, 0.1);
-    backdrop-filter: blur(15px);
+    background: var(--input-background);
+    cursor: pointer;
 }
 
 .media-upload-area:hover {
     border-color: var(--accent-color);
-    background: rgba(167, 139, 250, 0.15);
-    transform: translateY(-5px);
-}
-
-.upload-icon {
-    color: var(--primary-color);
-    font-size: 3.5rem;
-    margin-bottom: 1.4rem;
+    background: rgba(188, 123, 210, 0.05);
+    transform: translateY(-2px);
 }
 
 .upload-button {
     background: var(--button-gradient);
     color: white;
-    padding: 1rem 2rem;
-    border-radius: 2.2rem;
-    font-weight: 700;
-    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 0.8rem 1.6rem;
+    border-radius: 1.2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
     cursor: pointer;
-    box-shadow: 0 10px 20px rgba(167, 139, 250, 0.4);
+    box-shadow: 0 4px 12px rgba(188, 123, 210, 0.2);
 }
 
 .upload-button:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 15px 25px rgba(167, 139, 250, 0.5);
-}
-
-.background-animation {
-    animation: backgroundAnimation 10s infinite alternate;
-    background-size: 200% 200%;
-}
-
-@keyframes backgroundAnimation {
-    0% { background-position: 0% 50%; background-image: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); }
-    50% { background-position: 100% 50%; background-image: linear-gradient(135deg, var(--secondary-color), var(--accent-color)); }
-    100% { background-position: 0% 50%; background-image: linear-gradient(135deg, var(--accent-color), var(--primary-color)); }
-}
-
-/* 改進星星背景動畫 */
-.stars {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: -1;
-}
-
-.star {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    background: #ffffff;
-    border-radius: 50%;
-    animation: twinkle var(--duration) linear infinite;
-    opacity: 0;
-    box-shadow: 0 0 15px #ffffff, 0 0 25px #A78BFA, 0 0 35px #7C3AED;
-}
-
-@keyframes twinkle {
-    0% { opacity: 0; transform: translateY(0) scale(0.8); filter: hue-rotate(0deg); }
-    50% { opacity: 1; transform: translateY(50vh) scale(1.3); filter: hue-rotate(180deg); }
-    100% { opacity: 0; transform: translateY(100vh) scale(0.8); filter: hue-rotate(360deg); }
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(188, 123, 210, 0.3);
 }
 
 /* 改進響應式設計 */
