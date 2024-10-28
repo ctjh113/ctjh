@@ -1,11 +1,11 @@
 :root {
-    --primary-color: #A78BFA; /* 更柔和的淺紫色 */
-    --secondary-color: #8B5CF6; /* 中紫色 */
-    --accent-color: #7C3AED; /* 深紫色 */
-    --background-color: #0F172A; /* 深藍色背景 */
+    --primary-color: #C4B5FD; /* 更柔和的紫色 */
+    --secondary-color: #A78BFA; /* 中紫色 */
+    --accent-color: #8B5CF6; /* 深紫色 */
+    --background-color: #1E1B4B; /* 深靛藍色背景 */
     --text-color: #F8FAFC;
-    --button-gradient: linear-gradient(135deg, #A78BFA, #7C3AED);
-    --card-background: rgba(30, 41, 59, 0.85); /* 更透明的卡片背景 */
+    --button-gradient: linear-gradient(135deg, #C4B5FD, #8B5CF6);
+    --card-background: rgba(30, 41, 59, 0.75);
     --input-background: rgba(51, 65, 85, 0.7);
     --input-border: #475569;
     --input-focus: #A78BFA;
@@ -15,8 +15,14 @@
 
 body {
     font-family: 'Noto Sans TC', sans-serif;
-    background: var(--background-color);
-    background-image: radial-gradient(circle at 50% 50%, #334155 0%, #0F172A 100%);
+    background: linear-gradient(
+        135deg,
+        var(--background-color),
+        #2D3748,
+        #4A5568
+    );
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
     color: var(--text-color);
     line-height: 1.8;
     opacity: 0;
@@ -60,6 +66,7 @@ body {
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: cardFloat 6s ease-in-out infinite;
 }
 
 .card:hover {
@@ -89,7 +96,8 @@ textarea, input[type="text"] {
     border-radius: 1.4rem;
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     font-size: 1.15rem;
-    backdrop-filter: blur(15px);
+    backdrop-filter: blur(20px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 textarea:focus, input[type="text"]:focus {
@@ -108,6 +116,8 @@ textarea:focus, input[type="text"]:focus {
     letter-spacing: 0.06em;
     text-transform: uppercase;
     box-shadow: 0 15px 25px rgba(167, 139, 250, 0.4);
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
 }
 
 .submit-button:hover {
@@ -221,4 +231,32 @@ textarea:focus, input[type="text"]:focus {
     0% { opacity: 0; transform: translateY(0) scale(0.8); filter: hue-rotate(0deg); }
     50% { opacity: 1; transform: translateY(50vh) scale(1.3); filter: hue-rotate(180deg); }
     100% { opacity: 0; transform: translateY(100vh) scale(0.8); filter: hue-rotate(360deg); }
+}
+
+/* 改進響應式設計 */
+@media (max-width: 768px) {
+    .card {
+        padding: 1.5rem !important;
+        margin: 1rem;
+        border-radius: 1.5rem;
+    }
+
+    h1 {
+        font-size: 2.5rem !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    textarea {
+        font-size: 1rem !important;
+        padding: 1rem !important;
+    }
+
+    .submit-button {
+        padding: 1rem !important;
+        font-size: 1.2rem !important;
+    }
+
+    .media-upload-area {
+        padding: 1.5rem;
+    }
 }
