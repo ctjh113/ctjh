@@ -7,7 +7,6 @@ const firebaseConfig = {
     appId: "1:81707489957:web:f8c441380b528d77018b4c",
     measurementId: "G-NM1KMK8HT9"
   };
-  
       firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
       const storage = firebase.storage();
@@ -18,9 +17,6 @@ const firebaseConfig = {
       const postMedia = document.getElementById('postMedia');
       const mediaPreview = document.getElementById('mediaPreview');
       const postCount = document.getElementById('postCount');
-      const replyToggle = document.getElementById('replyToggle');
-      const postSelector = document.getElementById('postSelector');
-      const replyContainer = document.getElementById('replyContainer');
   
       function updateCharCount() {
           const currentLength = postContent.value.length;
@@ -74,43 +70,13 @@ const firebaseConfig = {
           return deleteButton;
       }
   
-      replyToggle.addEventListener('click', async function() {
-          this.classList.toggle('active');
-          replyContainer.classList.toggle('hidden');
-          
-          if (this.classList.contains('active')) {
-              this.textContent = '切換到發文模式';
-              // 載入現有貼文
-              const posts = await db.collection('posts')
-                  .orderBy('createdAt', 'desc')
-                  .limit(20)
-                  .get();
-                  
-              postSelector.innerHTML = '<option value="">選擇要回復的貼文...</option>';
-              posts.forEach(post => {
-                  const option = document.createElement('option');
-                  option.value = post.id;
-                  const replyCount = post.data().replyCount || 0;
-                  option.textContent = `#${post.data().postNumber} (${replyCount}則回復) - ${post.data().content.substring(0, 30)}...`;
-                  postSelector.appendChild(option);
-              });
-          } else {
-              this.textContent = '切換到回復模式';
-          }
-      });
       document.getElementById('postForm').addEventListener('submit', async function(e) {
           e.preventDefault();
           
           const content = postContent.value;
-          const isReplyMode = replyToggle.classList.contains('active');
           
           if (content.trim().length < 3) {
               alert('請輸入至少3個字');
-              return;
-          }
-          
-          if (isReplyMode && !postSelector.value) {
-              alert('請選擇要回復的貼文');
               return;
           }
           
@@ -135,93 +101,40 @@ const firebaseConfig = {
                   });
               }
   
-              if (isReplyMode) {
-                  // 獲取原始貼文的資訊
-                  const originalPostRef = db.collection('posts').doc(postSelector.value);
-                  const originalPost = await originalPostRef.get();
-                  const originalPostData = originalPost.data();
-                  const currentReplyCount = originalPostData.replyCount || 0;
-                  const newReplyNumber = currentReplyCount + 1;
+              const postsSnapshot = await db.collection('posts').get();
+              
+              // 獲取隨機用戶
+              const usersSnapshot = await db.collection('users').get();
+              const users = usersSnapshot.docs;
+              const randomUser = users[Math.floor(Math.random() * users.length)];
+              
+              const postData = {
+                  content: content,
+                  mediaUrls: mediaUrls,
+                  postNumber: postsSnapshot.size + 1,
+                  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                  ipAddress: ipAddress,
+                  status: 'pending',
+                  createdDate: new Date().toISOString(),
+                  replyCount: 0,
+                  isReply: false,
+                  assignedUser: randomUser.id
+              };
 
-                  // 獲取隨機用戶
-                  const usersSnapshot = await db.collection('users').get();
-                  const users = usersSnapshot.docs;
-                  const randomUser = users[Math.floor(Math.random() * users.length)];
+              // 使用事務來處理發文和更新用戶計數
+              await db.runTransaction(async (transaction) => {
+                  const newPostRef = db.collection('posts').doc();
+                  transaction.set(newPostRef, postData);
 
-                  // 新增回復到 replies 集合
-                  const replyData = {
-                      content: content,
-                      mediaUrls: mediaUrls,
-                      originalPostId: postSelector.value,  // 原始貼文的 ID
-                      originalPostNumber: originalPostData.postNumber,  // 原始貼文的編號
-                      replyNumber: newReplyNumber,  // 該貼文的第幾則回復
-                      isReply: true,  // 標記這是一則回復
-                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                      ipAddress: ipAddress,
-                      status: 'pending',
-                      createdDate: new Date().toISOString(),
-                      assignedUser: randomUser.id  // 隨機選擇的用戶文檔ID
-                  };
-
-                  // 使用事務來確保資料一致性
-                  await db.runTransaction(async (transaction) => {
-                      // 新增回復到 replies 集合
-                      const newReplyRef = db.collection('replies').doc();
-                      transaction.set(newReplyRef, replyData);
-
-                      // 更新原始貼文的回復計數
-                      transaction.update(originalPostRef, {
-                          replyCount: newReplyNumber
-                      });
-
-                      // 更新用戶的發文計數
-                      transaction.update(randomUser.ref, {
-                          postCount: firebase.firestore.FieldValue.increment(1)
-                      });
+                  transaction.update(randomUser.ref, {
+                      postCount: firebase.firestore.FieldValue.increment(1)
                   });
-
-              } else {
-                  // 如果是發文模式，添加到 posts 集合
-                  const postsSnapshot = await db.collection('posts').get();
-                  
-                  // 獲取隨機用戶
-                  const usersSnapshot = await db.collection('users').get();
-                  const users = usersSnapshot.docs;
-                  const randomUser = users[Math.floor(Math.random() * users.length)];
-                  
-                  const postData = {
-                      content: content,
-                      mediaUrls: mediaUrls,
-                      postNumber: postsSnapshot.size + 1,
-                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                      ipAddress: ipAddress,
-                      status: 'pending',
-                      createdDate: new Date().toISOString(),
-                      replyCount: 0,
-                      isReply: false,
-                      // 修改這裡：只存儲隨機選擇的用戶文檔ID
-                      assignedUser: randomUser.id
-                  };
-
-                  // 使用事務來處理發文和更新用戶計數
-                  await db.runTransaction(async (transaction) => {
-                      const newPostRef = db.collection('posts').doc();
-                      transaction.set(newPostRef, postData);
-
-                      // 更新用戶的發文計數
-                      transaction.update(randomUser.ref, {
-                          postCount: firebase.firestore.FieldValue.increment(1)
-                      });
-                  });
-              }
+              });
 
               // 重置表單
               postContent.value = '';
               mediaPreview.innerHTML = '';
               charCount.textContent = '已輸入 0 字';
-              if (isReplyMode) {
-                  postSelector.value = '';
-              }
               
               submitButton.innerHTML = `
                   <span>發布成功</span>
@@ -232,7 +145,7 @@ const firebaseConfig = {
               
               setTimeout(() => {
                   submitButton.innerHTML = `
-                      <span>${isReplyMode ? '發布回復' : '發布貼文'}</span>
+                      <span>發布貼文</span>
                       <svg class="h-8 w-8 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                       </svg>
@@ -250,7 +163,7 @@ const firebaseConfig = {
               `;
               setTimeout(() => {
                   submitButton.innerHTML = `
-                      <span>${isReplyMode ? '發布回復' : '發布貼文'}</span>
+                      <span>發布貼文</span>
                       <svg class="h-8 w-8 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                       </svg>
