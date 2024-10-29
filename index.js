@@ -18,6 +18,9 @@ const firebaseConfig = {
       const postMedia = document.getElementById('postMedia');
       const mediaPreview = document.getElementById('mediaPreview');
       const postCount = document.getElementById('postCount');
+      const replyToggle = document.getElementById('replyToggle');
+      const postSelector = document.getElementById('postSelector');
+      const replyContainer = document.getElementById('replyContainer');
   
       function updateCharCount() {
           const currentLength = postContent.value.length;
@@ -71,13 +74,43 @@ const firebaseConfig = {
           return deleteButton;
       }
   
+      replyToggle.addEventListener('click', async function() {
+          this.classList.toggle('active');
+          replyContainer.classList.toggle('hidden');
+          
+          if (this.classList.contains('active')) {
+              this.textContent = '切換到發文模式';
+              // 載入現有貼文
+              const posts = await db.collection('posts')
+                  .orderBy('createdAt', 'desc')
+                  .limit(20)
+                  .get();
+                  
+              postSelector.innerHTML = '<option value="">選擇要回復的貼文...</option>';
+              posts.forEach(post => {
+                  const option = document.createElement('option');
+                  option.value = post.id;
+                  const replyCount = post.data().replyCount || 0;
+                  option.textContent = `#${post.data().postNumber} (${replyCount}則回復) - ${post.data().content.substring(0, 30)}...`;
+                  postSelector.appendChild(option);
+              });
+          } else {
+              this.textContent = '切換到回復模式';
+          }
+      });
       document.getElementById('postForm').addEventListener('submit', async function(e) {
           e.preventDefault();
           
           const content = postContent.value;
+          const isReplyMode = replyToggle.classList.contains('active');
           
           if (content.trim().length < 3) {
               alert('請輸入至少3個字');
+              return;
+          }
+          
+          if (isReplyMode && !postSelector.value) {
+              alert('請選擇要回復的貼文');
               return;
           }
           
@@ -85,15 +118,10 @@ const firebaseConfig = {
           submitButton.disabled = true;
           
           try {
-              // 獲取當前貼文數量
-              const postsSnapshot = await db.collection('posts').get();
-              const nextPostNumber = postsSnapshot.size + 1;
-  
-              // 獲取 IP 地址
               const ipResponse = await fetch('https://api.ipify.org?format=json');
               const ipData = await ipResponse.json();
               const ipAddress = ipData.ip;
-  
+              
               // 處理媒體文件上傳
               const mediaUrls = [];
               if (postMedia.files.length > 0) {
@@ -107,68 +135,128 @@ const firebaseConfig = {
                   });
               }
   
-              // 獲取所有用戶並隨機選擇一個
-              const usersSnapshot = await db.collection('users').get();
-              let assignedUser = 'system';
-              let postRef;
-  
-              if (!usersSnapshot.empty) {
+              if (isReplyMode) {
+                  // 獲取原始貼文的資訊
+                  const originalPostRef = db.collection('posts').doc(postSelector.value);
+                  const originalPost = await originalPostRef.get();
+                  const originalPostData = originalPost.data();
+                  const currentReplyCount = originalPostData.replyCount || 0;
+                  const newReplyNumber = currentReplyCount + 1;
+
+                  // 獲取隨機用戶
+                  const usersSnapshot = await db.collection('users').get();
                   const users = usersSnapshot.docs;
                   const randomUser = users[Math.floor(Math.random() * users.length)];
-                  assignedUser = randomUser.id;
-              }
-  
-              // 建立貼文資料
-              const postData = {
-                  content: content,
-                  mediaUrls: mediaUrls,
-                  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                  ipAddress: ipAddress,
-                  status: 'pending',
-                  createdDate: new Date().toISOString(),
-                  postNumber: nextPostNumber,
-                  assignedUser: assignedUser
-              };
-  
-              // 新增貼文
-              postRef = await db.collection('posts').add(postData);
-  
-              // 如果有指派給實際用戶（不是系統），更新用戶資料
-              if (assignedUser !== 'system') {
-                  await db.collection('users').doc(assignedUser).update({
-                      assignedPosts: firebase.firestore.FieldValue.arrayUnion({
-                          postId: postRef.id,
-                          assignedAt: new Date().toISOString()
-                      })
+
+                  // 新增回復到 replies 集合
+                  const replyData = {
+                      content: content,
+                      mediaUrls: mediaUrls,
+                      originalPostId: postSelector.value,  // 原始貼文的 ID
+                      originalPostNumber: originalPostData.postNumber,  // 原始貼文的編號
+                      replyNumber: newReplyNumber,  // 該貼文的第幾則回復
+                      isReply: true,  // 標記這是一則回復
+                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                      ipAddress: ipAddress,
+                      status: 'pending',
+                      createdDate: new Date().toISOString(),
+                      assignedUser: randomUser.id  // 隨機選擇的用戶文檔ID
+                  };
+
+                  // 使用事務來確保資料一致性
+                  await db.runTransaction(async (transaction) => {
+                      // 新增回復到 replies 集合
+                      const newReplyRef = db.collection('replies').doc();
+                      transaction.set(newReplyRef, replyData);
+
+                      // 更新原始貼文的回復計數
+                      transaction.update(originalPostRef, {
+                          replyCount: newReplyNumber
+                      });
+
+                      // 更新用戶的發文計數
+                      transaction.update(randomUser.ref, {
+                          postCount: firebase.firestore.FieldValue.increment(1)
+                      });
+                  });
+
+              } else {
+                  // 如果是發文模式，添加到 posts 集合
+                  const postsSnapshot = await db.collection('posts').get();
+                  
+                  // 獲取隨機用戶
+                  const usersSnapshot = await db.collection('users').get();
+                  const users = usersSnapshot.docs;
+                  const randomUser = users[Math.floor(Math.random() * users.length)];
+                  
+                  const postData = {
+                      content: content,
+                      mediaUrls: mediaUrls,
+                      postNumber: postsSnapshot.size + 1,
+                      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                      ipAddress: ipAddress,
+                      status: 'pending',
+                      createdDate: new Date().toISOString(),
+                      replyCount: 0,
+                      isReply: false,
+                      // 修改這裡：只存儲隨機選擇的用戶文檔ID
+                      assignedUser: randomUser.id
+                  };
+
+                  // 使用事務來處理發文和更新用戶計數
+                  await db.runTransaction(async (transaction) => {
+                      const newPostRef = db.collection('posts').doc();
+                      transaction.set(newPostRef, postData);
+
+                      // 更新用戶的發文計數
+                      transaction.update(randomUser.ref, {
+                          postCount: firebase.firestore.FieldValue.increment(1)
+                      });
                   });
               }
-  
-              // 成功處理
-              submitButton.innerHTML = '發布成功！';
-              submitButton.classList.add('bg-emerald-500');
-              
-              const message = document.createElement('div');
-              message.className = 'mt-6 p-5 bg-emerald-500/20 text-emerald-300 rounded-xl text-center fade-in font-medium text-lg';
-              message.textContent = '請耐心等待審核';
-              this.insertAdjacentElement('afterend', message);
-              
+
               // 重置表單
+              postContent.value = '';
+              mediaPreview.innerHTML = '';
+              charCount.textContent = '已輸入 0 字';
+              if (isReplyMode) {
+                  postSelector.value = '';
+              }
+              
+              submitButton.innerHTML = `
+                  <span>發布成功</span>
+                  <svg class="h-8 w-8 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+              `;
+              
               setTimeout(() => {
-                  this.reset();
-                  charCount.textContent = '已輸入 0 字';
-                  charCount.classList.remove('text-red-400');
-                  submitButton.innerHTML = '發布貼文 <svg class="h-7 w-7 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
+                  submitButton.innerHTML = `
+                      <span>${isReplyMode ? '發布回復' : '發布貼文'}</span>
+                      <svg class="h-8 w-8 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                      </svg>
+                  `;
                   submitButton.disabled = false;
-                  submitButton.classList.remove('bg-emerald-500');
-                  message.remove();
-                  mediaPreview.innerHTML = '';
-              }, 3000);
-  
+              }, 2000);
+
           } catch (error) {
-              console.error("發布失敗: ", error);
-              alert('發布失敗，請稍後再試');
-              submitButton.innerHTML = '發布貼文 <svg class="h-7 w-7 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>';
-              submitButton.disabled = false;
+              console.error('Error:', error);
+              submitButton.innerHTML = `
+                  <span>發布失敗</span>
+                  <svg class="h-8 w-8 ml-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+              `;
+              setTimeout(() => {
+                  submitButton.innerHTML = `
+                      <span>${isReplyMode ? '發布回復' : '發布貼文'}</span>
+                      <svg class="h-8 w-8 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                      </svg>
+                  `;
+                  submitButton.disabled = false;
+              }, 2000);
           }
       });
   
